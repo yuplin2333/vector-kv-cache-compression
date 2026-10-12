@@ -162,8 +162,8 @@ python scripts/rocketkv_dump_longbench.py RocketKV/dataset/longbench_kvproto
 
 ## License
 
-The code in this repository is released under the MIT License (see `LICENSE`), except for
-files that carry their own license header, which remain under that license.
+The code written for this project is released under the MIT License (see `LICENSE`).
+Third-party code keeps its original license, as listed below.
 
 Files under `patches/` are modified copies of third-party code and keep their original
 licenses and copyright notices:

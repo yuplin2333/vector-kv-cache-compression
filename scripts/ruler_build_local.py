@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
 """Convert RULER raw data (NVIDIA/RULER prepare.py output) into a local kvpress-format HF
 dataset, saved to disk (no HF hub push), byte-identical in schema to the simonjegou/ruler
 mirror that kvpress's evaluate.py expects.

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
 """Aggregate the RULER long-context sweep (experiments/ruler_longcontext.sh) into a
 length x method table per compression ratio.
 

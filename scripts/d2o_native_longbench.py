@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
 """Run our faithful D2O reimplementation (src/vector/baselines/d2o_native.py) on LongBench,
 using kvpress's EXACT prompt protocol and scorer, so results are directly comparable to the
 VECTOR / kvpress main table. Architecture-general: Llama-3.1 (validation) and Qwen3.
