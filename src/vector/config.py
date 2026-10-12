@@ -91,9 +91,13 @@ class ProbeConfig:
     weights_path: Path = Path("weights/probe.pt")
     batch_size: int = 8
     val_seqs: int = 100
+    calib_data: str = "c4"  # key of vector.data.calibration.CALIB_STREAMS
 
     def __post_init__(self) -> None:
         self.weights_path = Path(self.weights_path)
+        assert self.calib_data in ("c4", "wikitext103"), (
+            f"unknown calib_data {self.calib_data!r}"
+        )
 
 
 @dataclass

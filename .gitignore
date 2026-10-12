@@ -235,3 +235,12 @@ Thumbs.db
 
 # LongBench v1 data (download locally with wget; too large for git)
 /data/LongBench/
+
+# Third-party checkouts (cloned + patched locally, see README)
+/kvpress/
+/RocketKV/
+/D2O/
+/RULER/
+
+# Generated RULER data (experiments/ruler_generate.sh + scripts/ruler_build_local.py)
+/data/RULER/

@@ -1,0 +1,15 @@
+{
+    "pipeline_params": {
+        "model_name": "Qwen/Qwen3-0.6B",
+        "tokenizer_name": "Qwen/Qwen3-0.6B",
+        "chat_template": "qwen",
+        "model_max_len": 32768,
+        "fattn": true,
+        "use_flash_attn": true,
+        "truncation_mode": "middle",
+        "batch_size": 1,
+        "out_of_max_len_allowed": true,
+        "base": 500000,
+        "rope_theta_factor": 1.0
+    }
+}

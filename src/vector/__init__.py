@@ -1,5 +1,5 @@
 """
-VECTOR: Holographic Linear Probe for efficient long-context KV cache compression.
+VECTOR: Value Estimation via Collinearity and Three-way Orthogonal Routing.
 
 Offline calibration produces per-layer projection matrices W_K, W_V that map
 the attention output at the end of each 32-token chunk (o_end) to reconstructed

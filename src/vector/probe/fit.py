@@ -15,7 +15,7 @@ from tqdm import tqdm
 from transformers import PreTrainedTokenizerBase
 
 from vector.config import ModelConfig, ProbeConfig
-from vector.data.calibration import stream_c4
+from vector.data.calibration import CALIB_STREAMS
 from vector.models.base import ModelAdapter
 from vector.probe.collect import extract_multilayer
 from vector.probe.features import expand_k_only, expand_v_only
@@ -93,7 +93,9 @@ def calibrate(
     val_K: dict[int, list[Tensor]] = {L: [] for L in layers}
 
     with tqdm(total=probe_cfg.val_seqs, desc="Calib val", unit="seq") as pbar:
-        for batch in stream_c4("validation", probe_cfg.batch_size, probe_cfg.val_seqs):
+        for batch in CALIB_STREAMS[probe_cfg.calib_data](
+            "validation", probe_cfg.batch_size, probe_cfg.val_seqs
+        ):
             res = extract_multilayer(
                 model,
                 tokenizer,
@@ -138,7 +140,9 @@ def calibrate(
     t0 = time.perf_counter()
 
     with tqdm(total=probe_cfg.train_seqs, desc="Calib train", unit="seq") as pbar:
-        for batch in stream_c4("train", probe_cfg.batch_size, probe_cfg.train_seqs):
+        for batch in CALIB_STREAMS[probe_cfg.calib_data](
+            "train", probe_cfg.batch_size, probe_cfg.train_seqs
+        ):
             res = extract_multilayer(
                 model,
                 tokenizer,

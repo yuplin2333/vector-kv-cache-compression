@@ -410,8 +410,27 @@ class EvaluationRunner:
                 seed=self.config.seed,
             )
         else:
-            logger.info(f"Loading dataset: {DATASET_REGISTRY[dataset_name]} (data_dir: {data_dir})")
-            df = load_dataset(DATASET_REGISTRY[dataset_name], data_dir=data_dir, split="test").to_pandas()
+            import os
+
+            # Local RULER (generated at long context lengths the simonjegou/ruler mirror lacks):
+            # if RULER_LOCAL_DIR/<data_dir> exists, load it from disk. Schema is byte-identical to
+            # the mirror (see scripts/ruler_build_local.py), so downstream handling is unchanged.
+            local_ruler = os.environ.get("RULER_LOCAL_DIR")
+            if (
+                dataset_name == "ruler"
+                and local_ruler
+                and (Path(local_ruler) / str(data_dir)).is_dir()
+            ):
+                from datasets import load_from_disk
+
+                local_path = Path(local_ruler) / str(data_dir)
+                logger.info(f"Loading LOCAL RULER: {local_path}")
+                df = load_from_disk(str(local_path)).to_pandas()
+            else:
+                logger.info(f"Loading dataset: {DATASET_REGISTRY[dataset_name]} (data_dir: {data_dir})")
+                df = load_dataset(
+                    DATASET_REGISTRY[dataset_name], data_dir=data_dir, split="test"
+                ).to_pandas()
 
         if fraction < 1.0:
             original_len = len(df)

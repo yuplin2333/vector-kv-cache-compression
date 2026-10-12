@@ -32,6 +32,7 @@ from benchmarks.math500.calculate_metrics import calculate_metrics as math500_sc
 from benchmarks.needle_in_haystack.calculate_metrics import (
     calculate_metrics as needle_in_haystack_scorer,
 )
+from benchmarks.ruler.calculate_metrics import calculate_metrics as ruler_scorer
 from benchmarks.zero_scrolls.calculate_metrics import (
     calculate_metrics as zero_scrolls_scorer,
 )
@@ -69,6 +70,7 @@ from kvpress import (
 # These dictionaries define the available datasets, scorers, and KVPress methods for evaluation.
 DATASET_REGISTRY = {
     "loogle": "simonjegou/loogle",
+    "ruler": "simonjegou/ruler",
     "zero_scrolls": "simonjegou/zero_scrolls",
     "infinitebench": "MaxJeblick/InfiniteBench",
     "longbench": "Xnhyacinth/LongBench",
@@ -82,6 +84,7 @@ DATASET_REGISTRY = {
 
 SCORER_REGISTRY = {
     "loogle": loogle_scorer,
+    "ruler": ruler_scorer,
     "zero_scrolls": zero_scrolls_scorer,
     "infinitebench": infinite_bench_scorer,
     "longbench": longbench_scorer,
@@ -97,6 +100,10 @@ PRESS_REGISTRY = {
     "adakv_snapkv": AdaKVPress(SnapKVPress()),
     "block_keydiff": BlockPress(press=KeyDiffPress(), block_size=128),
     "chunkkv": ChunkKVPress(press=SnapKVPress(), chunk_length=20),
+    # NOTE: D2O is intentionally not a press here: a prefill press on the unrepeated GQA cache
+    # cannot reproduce D2O's per-query-head select+merge or its first-decode-step compression.
+    # D2O runs via the faithful modeling port src/vector/baselines/d2o_native.py
+    # (scripts/d2o_native_longbench.py) and the official repo (experiments/d2o_longbench.sh).
     "critical_adakv_expected_attention": CriticalAdaKVPress(
         ExpectedAttentionPress(use_vnorm=False)
     ),
@@ -135,6 +142,13 @@ PRESS_REGISTRY = {
     "vector_uniform": VECTORPress(budget_allocation="per_head_uniform"),
     "vector_dynamic": VECTORPress(budget_allocation="per_head_dynamic"),
     "keydiff_vector": KeyDiffVECTORPress(),
+    # Reconstructability-signal ablation: same candidate pool + budget as
+    # keydiff_vector; only the within-candidate approx/exact split rule differs.
+    "keydiff_vector_imprank": KeyDiffVECTORPress(approx_selection="importance"),
+    "keydiff_vector_random": KeyDiffVECTORPress(approx_selection="random"),
+    # Reconstructability diagnostic: records per-layer mean v_err that each rule WOULD approximate
+    # + corr(importance, v_err). Explains why imprank < random. Use --dump_vector_stats.
+    "keydiff_vector_diag": KeyDiffVECTORPress(record_diagnostics=True),
     "keydiff_v2k": KeyDiffVECTORV2KPress(),
     "snapkv_vector": SnapKVVECTORPress(),
     "kvzip_vector": KVzipVECTORPress(),

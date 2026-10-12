@@ -86,6 +86,12 @@ def parse_args() -> argparse.Namespace:
             "--k-only-for-v."
         ),
     )
+    ap.add_argument(
+        "--calib-data",
+        choices=["c4", "wikitext103"],
+        default="c4",
+        help="Calibration corpus (paper default: c4; wikitext103 = domain ablation)",
+    )
     ap.add_argument("--seed", type=int, default=42)
     return ap.parse_args()
 
@@ -121,6 +127,7 @@ def main() -> None:
         batch_size=args.batch_size,
         lambda_ratio=args.lam,
         weights_path=args.weights,
+        calib_data=args.calib_data,
     )
 
     logger.info(f"Loading {args.model} ...")
@@ -173,6 +180,7 @@ def main() -> None:
             "chunk_size": args.chunk_size,
             "train_seqs": args.train_seqs,
             "seq_len": args.seq_len,
+            "calib_data": args.calib_data,
             "lam": args.lam,
             "layers": list(W_V.keys()),
             "v_k_only": True,
@@ -197,6 +205,7 @@ def main() -> None:
             "chunk_size": args.chunk_size,
             "train_seqs": args.train_seqs,
             "seq_len": args.seq_len,
+            "calib_data": args.calib_data,
             "lam": args.lam,
             "layers": list(W_K.keys()),
             "k_v_only": True,

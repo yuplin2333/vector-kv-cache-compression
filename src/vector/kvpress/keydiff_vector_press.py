@@ -39,16 +39,34 @@ class KeyDiffVECTORPress(KeyDiffPress):
         Number of leading tokens (attention sinks) to protect from eviction/approx.
     n_local : int
         Number of trailing tokens (local window) to protect from eviction/approx.
+    approx_selection : str
+        Rule for choosing WHICH kept candidates enter the Approximation tier
+        (K-only, V reconstructed). Same candidate pool and budget for all rules;
+        only the within-candidate approx/exact split differs. Used for the
+        reconstructability-signal ablation (does v_err do real work?):
+          - "v_err"      : VECTOR — approximate lowest reconstruction-error tokens.
+          - "importance" : ablation — approximate least-important candidates
+                           (== "retain top-X% exactly, approximate the next Y%").
+          - "random"     : control — approximate a random subset of candidates.
+    random_seed : int
+        Seed for the "random" approx_selection (reproducible per layer/head).
     """
 
     weights_path: str = ""
     approx_ratio: float | None = None
     n_sink: int = 4
     n_local: int = 4
+    approx_selection: str = "v_err"
+    random_seed: int = 42
+    record_diagnostics: bool = False
 
     def __post_init__(self) -> None:
         assert self.n_sink >= 0, f"n_sink must be >= 0, got {self.n_sink}"
         assert self.n_local > 0, f"n_local must be > 0, got {self.n_local}"
+        assert self.approx_selection in ("v_err", "importance", "random"), (
+            f"approx_selection must be one of v_err|importance|random, "
+            f"got {self.approx_selection!r}"
+        )
         # W_KV is loaded lazily on first use via _ensure_weights().
         self._vector_stats: list[dict[str, Any]] = []
         super().__post_init__()  # ScorerPress: validates compression_ratio
@@ -164,9 +182,25 @@ class KeyDiffVECTORPress(KeyDiffPress):
             )
 
             if n_approx > 0:
-                diff_cands = v_err_elig_hd[cand]
-                order_diff = torch.argsort(diff_cands, descending=False)  # easy first
-                approx_local = cand[order_diff[:n_approx]]  # eligible-local coords
+                if self.approx_selection == "v_err":
+                    # VECTOR: approximate the easiest-to-reconstruct (lowest v_err).
+                    diff_cands = v_err_elig_hd[cand]
+                    order_diff = torch.argsort(
+                        diff_cands, descending=False
+                    )  # easy first
+                    approx_local = cand[order_diff[:n_approx]]  # eligible-local coords
+                elif self.approx_selection == "importance":
+                    # Ablation: ignore reconstructability. cand is sorted by importance
+                    # descending, so its tail is the least-important kept tokens.
+                    # == "retain top (n_keep_elig - n_approx) exactly, approximate next".
+                    approx_local = cand[-n_approx:]
+                else:  # "random" — validated in __post_init__
+                    # Control: random subset of candidates, reproducible per layer/head.
+                    gen = torch.Generator(device=keys.device).manual_seed(
+                        self.random_seed + layer_idx * 1000 + hd
+                    )
+                    perm = torch.randperm(len(cand), device=keys.device, generator=gen)
+                    approx_local = cand[perm[:n_approx]]
             else:
                 approx_local = torch.zeros(0, dtype=torch.long, device=keys.device)
 
@@ -190,6 +224,34 @@ class KeyDiffVECTORPress(KeyDiffPress):
             r2_approx: float | None = _safe_r2(true_elig[expand], pred_elig[expand])
         else:
             r2_approx = None
+        # Optional per-layer diagnostic: over the SAME candidate pool, what mean
+        # v_err would each selection rule approximate? Explains why importance-rank
+        # (imprank) is worse than random: if least-important <-> higher v_err, imprank
+        # systematically reconstructs the hardest tokens. corr_imp_verr < 0 is that cause.
+        diag: dict[str, Any] = {}
+        if self.record_diagnostics and n_approx > 0:
+            ve_vecterr, ve_imprank, ve_rand, corrs = [], [], [], []
+            for hd in range(h):
+                s_hd = scores[0, hd, eligible_start:eligible_end]
+                e_hd = v_err[0, hd, eligible_start:eligible_end].float()
+                cand_hd = torch.argsort(s_hd, descending=True)[:n_keep_elig]
+                ec = e_hd[
+                    cand_hd
+                ]  # v_err over the candidate pool (importance-desc order)
+                ve_vecterr.append(
+                    torch.sort(ec).values[:n_approx].mean()
+                )  # lowest v_err
+                ve_imprank.append(ec[-n_approx:].mean())  # cand tail = least important
+                ve_rand.append(ec.mean())  # E[v_err] of a random subset of candidates
+                sc = s_hd[cand_hd].float()
+                if ec.numel() > 1 and float(ec.std()) > 0 and float(sc.std()) > 0:
+                    corrs.append(torch.corrcoef(torch.stack([sc, ec]))[0, 1])
+            diag = {
+                "verr_approx_vecterr": float(torch.stack(ve_vecterr).mean()),
+                "verr_approx_imprank": float(torch.stack(ve_imprank).mean()),
+                "verr_approx_random": float(torch.stack(ve_rand).mean()),
+                "corr_imp_verr": (float(torch.stack(corrs).mean()) if corrs else None),
+            }
         self._vector_stats.append(
             {
                 "layer_idx": layer_idx,
@@ -202,6 +264,7 @@ class KeyDiffVECTORPress(KeyDiffPress):
                 "n_evict_total": int(h * n_evict_per_head),
                 "r2_global": r2_global,
                 "r2_approx": r2_approx,
+                **diag,
             }
         )
 
