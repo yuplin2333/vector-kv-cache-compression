@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+# Modified by the VECTOR authors: VECTOR presses and ablation presses registered, local RULER loading.
 
 import sys
 from pathlib import Path

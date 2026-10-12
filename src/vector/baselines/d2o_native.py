@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
+# Adapted from D2O (https://github.com/AIoT-MLSys-Lab/D2O, Apache License 2.0;
+# see patches/D2O/LICENSE). Modified by the VECTOR authors: port to transformers 4.57, Qwen3 support.
 """Faithful reimplementation of D2O (Wan et al., ICLR'25) for transformers 4.57.x,
 architecture-general (Llama-3.1, Qwen3), via an attention-forward monkeypatch.
 
@@ -6,9 +8,8 @@ Why this exists
 ---------------
 The official D2O repo (AIoT-MLSys-Lab/D2O) ships Llama-only modeling for transformers
 4.37.2 and has no Qwen support, while our paper reports every competitor on Llama-3.1,
-Qwen3-14B and Qwen3-0.6B. An earlier attempt to shoehorn D2O into a kvpress prefill-press
-(``src/vector/kvpress/d2o_press.py``) FAILED its Llama validation gate by 9-31 points,
-because D2O's real behavior is fundamentally incompatible with kvpress's cache layout:
+Qwen3-14B and Qwen3-0.6B. A kvpress prefill-press version of D2O
+failed its Llama validation gate by 9-31 points, because D2O's real behavior is fundamentally incompatible with kvpress's cache layout:
 
   * D2O de-GQAs the cache. On GQA models it stores the ``repeat_kv``'d (query-head) K/V and
     selects/merges **per query-head** (Llama 32 heads, Qwen3-14B 40, Qwen3-0.6B 16). kvpress

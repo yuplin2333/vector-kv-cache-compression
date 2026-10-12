@@ -103,6 +103,7 @@
 # POSSIBILITY OF SUCH DAMAGES.
 
 # =======================================================================
+# Modified by the VECTOR authors: kvpress-aligned LongBench inputs, Qwen3 support, p_c-bound KV retention.
 
 import os
 from tqdm import tqdm

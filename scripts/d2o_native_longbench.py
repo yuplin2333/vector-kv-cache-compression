@@ -204,7 +204,7 @@ def main() -> None:
 
     summary: dict = {}
     for ratio in args.ratios:
-        rstr = f"{ratio:.2f}"  # 0.25 / 0.50 / 0.75 / 0.90 -- matches b2_aggregate + d2o_press.sh
+        rstr = f"{ratio:.2f}"  # 0.25 / 0.50 / 0.75 / 0.90 -- matches competing_baselines_aggregate.py
         for task in args.tasks:
             run_dir = (
                 out_root

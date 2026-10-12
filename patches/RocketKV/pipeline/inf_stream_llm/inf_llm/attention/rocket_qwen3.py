@@ -111,6 +111,7 @@
 # RMSNorm normalizes the last dim within each head, so post-permute application is
 # equivalent to Qwen3's pre-permute (b, len, num_heads, dim) application.
 # Algorithm otherwise untouched.
+# Modified by the VECTOR authors: Qwen3 variant of rocket.py (QK-norm handling).
 
 import torch
 import math

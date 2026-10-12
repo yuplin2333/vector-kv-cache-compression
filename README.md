@@ -159,3 +159,23 @@ python scripts/rocketkv_dump_longbench.py RocketKV/dataset/longbench_kvproto
 - Download any benchmark data required by the selected script before large runs.
 - For full sweeps, run the other scripts under `experiments/kvpress_longbench/`,
   and `experiments/kvpress_niah/`.
+
+## License
+
+The code in this repository is released under the MIT License (see `LICENSE`), except for
+files that carry their own license header, which remain under that license.
+
+Files under `patches/` are modified copies of third-party code and keep their original
+licenses and copyright notices:
+
+- `patches/kvpress/`: [kvpress](https://github.com/NVIDIA/kvpress), Apache License 2.0
+  (`patches/kvpress/LICENSE`).
+- `patches/D2O/`: [D2O](https://github.com/AIoT-MLSys-Lab/D2O), Apache License 2.0
+  (`patches/D2O/LICENSE`). `src/vector/baselines/d2o_native.py` is adapted from D2O and is
+  also under the Apache License 2.0.
+- `patches/RocketKV/`: [RocketKV](https://github.com/NVlabs/RocketKV), NVIDIA License
+  (`patches/RocketKV/LICENSE`), which permits use for non-commercial (research or evaluation)
+  purposes only; it includes code from longctx_bench under the MIT License
+  (`patches/RocketKV/third-party-licenses/`). These files are distributed under the same terms.
+
+Modified third-party files are marked with a "Modified by the VECTOR authors" notice.

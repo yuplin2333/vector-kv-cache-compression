@@ -1,3 +1,4 @@
+# Modified by the VECTOR authors: kvpress-aligned LongBench inputs, Llama-3.1 support, memory optimization.
 import math
 from typing import Optional, Tuple
 
